@@ -27,11 +27,11 @@ foreach ($file in $files) {
         if (Test-Path -Path "$FolderPath\$($fixed_title) ($($m.Year))") {
             Write-Verbose "Path already exists: $FolderPath\$($fixed_title) ($($m.Year))"
         } else {
-            #If the filename has a year it will be duplicated, fix later
+            #If the filename has a year it will be duplicated, if there are 2 files (mp4 & .srt) there will also be dups, fix later
             New-Item -Path "$FolderPath\$($fixed_title) ($($m.Year))" -ItemType Directory
-        }     
-        Write-Output "$FolderPath\$($fixed_title) ($($m.Year))"
-        Start-Sleep -Milliseconds 250
-        Move-Item -Path $file.FullName -Destination "$FolderPath\$($fixed_title) ($($m.Year))"
+            Write-Output "$FolderPath\$($fixed_title) ($($m.Year))"
+            Start-Sleep -Milliseconds 250
+            Move-Item -Path $file.FullName -Destination "$FolderPath\$($fixed_title) ($($m.Year))"
+        }
     }
 }
