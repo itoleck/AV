@@ -10,11 +10,11 @@
 #Need to import the preset .json file into HandBrake GUI also.
 
 param (
-    [Parameter(Mandatory=$true)][string] $HandBrakeFolderPath,      #Path to where HandBrake is installed, i.e. 'c:\program Files\HandBrake'
+    [Parameter(Mandatory=$true)][System.IO.DirectoryInfo] $HandBrakeFolderPath,      #Path to where HandBrake is installed, i.e. 'c:\program Files\HandBrake'
     [Parameter(Mandatory=$true)][string] $HandBrakePresetFileName,  #HandBrake preset filename, .i.e. AMD-VCE-AV1-4K-PassThrough-Subs.json
     [Parameter(Mandatory=$true)][string] $HandBrakePresetName,      #Name of the preset in the HandBrake GUI
-    [Parameter(Mandatory=$true)][string] $VideoFolderPath,          #Root videos folder, i.e. v:\movies
-    [Parameter(Mandatory=$true)][string] $VideoOutputFolderPath,    #folder to output re-encoded files, i.e. c:\videos
+    [Parameter(Mandatory=$true)][System.IO.DirectoryInfo] $VideoFolderPath,          #Root videos folder, i.e. v:\movies
+    [Parameter(Mandatory=$true)][System.IO.DirectoryInfo] $VideoOutputFolderPath,    #folder to output re-encoded files, i.e. c:\videos
     [Parameter(Mandatory=$false)][bool] $force                      #Force encoding of video, default just re-encodes h264 and not other formats like HEVC or AV1. Use force to re-encode non-h264 content
 )
 
@@ -66,6 +66,7 @@ function probe-files {
             RedirectStandardError = "$($file.FullName)-sterr.txt"
             UseNewEnvironment = $true
         }
+        Write-Verbose "$($processOptions.FilePath) $($processOptions.ArgumentList)"
         Start-Process @processOptions
     }
 }

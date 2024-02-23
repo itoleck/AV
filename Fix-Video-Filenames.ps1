@@ -2,7 +2,7 @@
 #Fixes ugly video file names (.mkv, .mp4, m4v) in a folder recursivley
 
 param (
-    [Parameter(Mandatory=$true)][string] $VideoFolderPath   #Root videos folder, i.e. v:\movies
+    [Parameter(Mandatory=$true)][System.IO.DirectoryInfo] $VideoFolderPath   #Root videos folder, i.e. v:\movies
 )
 
 function Fix-FileNames($rootpath) {
