@@ -61,7 +61,7 @@ function probe-files {
         #$hevc.stderr | Select-String 'HEVC'
 
         $processOptions = @{
-            FilePath = "ffprobe.exe"
+            FilePath = ".\ffprobe.exe"
             ArgumentList = "-i ""$file"""
             RedirectStandardError = "$($file.FullName)-sterr.txt"
             UseNewEnvironment = $true
