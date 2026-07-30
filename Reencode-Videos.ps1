@@ -50,8 +50,8 @@ function Execute-Command ($commandArguments)
 }
 
 function probe-files {
-    $hbfolder = Get-Item -LiteralPath $HandBrakeFolderPath
-    $files = Get-ChildItem -LiteralPath $VideoFolderPath -File -Recurse | Where-Object {$_.Extension -eq ".mkv" -or $_.Extension -eq ".mp4" -or $_.Extension -ne ".mv4"}
+    #$hbfolder = Get-Item -LiteralPath $HandBrakeFolderPath
+    $files = Get-ChildItem -File -Recurse -LiteralPath $VideoFolderPath | Where-Object {$_.Extension -eq ".mkv" -or $_.Extension -eq ".mp4" -or $_.Extension -ne ".mv4"}
     ForEach($file in $files) {
     #    $hevc = Execute-Command -commandTitle 'mediainfo' -commandPath "$HandBrakeFolderPath\MediaInfo.exe" -commandArguments "Z:\Video\HumansS1E3-cli.mkv"
         #$hevc = Execute-Command -commandArguments $file.FullName

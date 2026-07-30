@@ -29,14 +29,15 @@ TMDB_API_KEY   = os.getenv("TMDB_API_KEY",   "YOUR_TMDB_API_KEY")
 RADARR_URL     = os.getenv("RADARR_URL",     "http://localhost:7878")
 RADARR_API_KEY = os.getenv("RADARR_API_KEY", "YOUR_RADARR_API_KEY")
 
-MIN_RATING       = 9   # Minimum TMDB vote average
-MIN_VOTE_COUNT   = 50    # Ignore movies with too few votes (unreliable rating)
+MIN_RATING       = 0   # Minimum TMDB vote average
+MIN_VOTE_COUNT   = 0    # Ignore movies with too few votes (unreliable rating)
+MIN_POPULARITY   = 0.5   # Minimum TMDB popularity
 MAX_PAGES        = 5     # TMDB pages to fetch (20 movies per page)
 QUALITY_PROFILE  = "HD-1080p"   # Radarr quality profile name (must exist)
 ROOT_FOLDER      = "/mnt/movies/movies"    # Radarr root folder path (must exist)
 MONITOR          = True         # Monitor new movies in Radarr
 SEARCH_ON_ADD    = False         # Trigger a search in Radarr immediately on add
-RELEASE_WINDOW_DAYS = 180       # How many days ahead to look for upcoming releases
+RELEASE_WINDOW_DAYS = 365       # How many days ahead to look for upcoming releases
 # ---------------------------------------------------------------------------
 
 logging.basicConfig(
@@ -63,7 +64,7 @@ def fetch_upcoming_movies(pages: int = MAX_PAGES) -> list[dict]:
     Results are sorted by primary_release_date ascending.
     """
     today     = date.today()
-    date_from = (today - timedelta(days=90)).isoformat()
+    date_from = (today - timedelta(days=1000)).isoformat()
     date_to   = (today + timedelta(days=RELEASE_WINDOW_DAYS)).isoformat()
 
     movies: list[dict] = []
@@ -104,6 +105,18 @@ def fetch_upcoming_movies(pages: int = MAX_PAGES) -> list[dict]:
     return movies
 
 
+def filter_by_popularity(movies: list[dict]) -> list[dict]:
+    """Keep only movies that meet the minimum popularity threshold."""
+    filtered = [
+        m for m in movies
+        if m.get("popularity", 0.0) > MIN_POPULARITY
+    ]
+    log.info(
+        "Popularity filter (> %.1f): %d → %d movies",
+        MIN_POPULARITY, len(movies), len(filtered),
+    )
+    return filtered
+
 def filter_by_rating(movies: list[dict]) -> list[dict]:
     """Keep only movies that meet the minimum rating and vote-count thresholds."""
     filtered = [
@@ -116,7 +129,6 @@ def filter_by_rating(movies: list[dict]) -> list[dict]:
         MIN_RATING, MIN_VOTE_COUNT, len(movies), len(filtered),
     )
     return filtered
-
 
 # ---------------------------------------------------------------------------
 # Radarr helpers
@@ -233,7 +245,8 @@ def main() -> None:
     # --- Fetch and filter upcoming movies from TMDB ---
     log.info("Fetching upcoming movies from TMDB (up to %d pages) …", MAX_PAGES)
     upcoming   = fetch_upcoming_movies(MAX_PAGES)
-    qualifying = filter_by_rating(upcoming)
+    popular    = filter_by_popularity(upcoming)
+    qualifying = filter_by_rating(popular)
 
     # Deduplicate by TMDB ID
     seen: set[int] = set()
@@ -281,6 +294,13 @@ def main() -> None:
             "Processing: %s | Rating: %.1f (%d votes) | TMDB ID: %d",
             title, rating, votes, tmdb_id,
         )
+        
+        # Request user confirmation
+        choice = input(f"Do you want to add '{title}' to Radarr? (y/N): ").strip().lower()
+        if choice != 'y':
+            log.info("Skipped adding '%s'.", title)
+            continue
+
         ok = add_movie_to_radarr(api_client, tmdb_id, quality_profile_id, ROOT_FOLDER)
         if ok:
             added += 1
